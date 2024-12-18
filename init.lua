@@ -46,5 +46,5 @@ return {
   { import = 'plugins.go' },
   { import = 'plugins.lsp' },
   { import = 'plugins.telescope' },
-  { import = 'plugins.notes' },
+  -- { import = 'plugins.notes' },
 }
