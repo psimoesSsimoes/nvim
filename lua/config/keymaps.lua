@@ -109,3 +109,10 @@ vim.keymap.set('n', '<leader>zz', function()
   end
 end, { desc = 'List all files in git root' })
 
+-- Find files in current file's directory
+vim.keymap.set('n', '<leader>fc', function()
+    require('telescope.builtin').find_files({
+        cwd = vim.fn.expand('%:p:h'),
+        prompt_title = 'Files in current directory',
+    })
+end, { desc = 'Find files in current directory' })
