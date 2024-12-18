@@ -24,10 +24,13 @@ return {
         pattern = 'go',
         callback = function()
           local opts = { buffer = true }
-          vim.keymap.set('n', '<leader>r', '<cmd>GoRun<CR>', opts)
-          vim.keymap.set('n', '<leader>t', '<cmd>GoTest<CR>', opts)
-          vim.keymap.set('n', '<leader>b', '<cmd>GoBuild<CR>', opts)
-          vim.keymap.set('n', '<leader>c', '<cmd>GoCoverageToggle<CR>', opts)
+           -- Run only the test function under cursor with leader t
+          vim.keymap.set('n', '<leader>t', '<cmd>GoTestFunc!<CR>', { desc = 'Run Go test function' })
+          vim.keymap.set('n', '<leader>c', '<cmd>GoCoverageToggle<CR>', { desc = 'Toggle Go coverage' })
+          
+          -- Additional test-related mappings you might find useful
+          vim.keymap.set('n', '<leader>ta', '<cmd>GoTest!<CR>', { desc = 'Run all tests in file' })
+          vim.keymap.set('n', '<leader>tl', '<cmd>GoTestCompile<CR>', { desc = 'Test compile' })
         end,
       })
     end,
