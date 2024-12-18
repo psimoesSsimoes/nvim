@@ -1,13 +1,29 @@
+-- Add this at the top to declare vim as a global
+---@diagnostic disable: undefined-global
+
 return {
   -- LSP Support
   {
     'neovim/nvim-lspconfig',
     event = { 'BufReadPre', 'BufNewFile' },
     dependencies = {
-      'mason.nvim',
-      'mason-lspconfig.nvim',
+      'williamboman/mason.nvim',
+      'williamboman/mason-lspconfig.nvim',
     },
     config = function()
+      -- Configure diagnostics first
+      vim.diagnostic.config({
+        virtual_text = true,
+        signs = true,
+        underline = true,
+        update_in_insert = false,
+        severity_sort = true,
+        float = {
+          border = "rounded",
+          source = "always",
+        },
+      })
+
       local lspconfig = require('lspconfig')
       
       -- Global mappings
@@ -15,8 +31,7 @@ return {
       vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
       vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
       
-      -- Use LspAttach autocommand to only map the following keys
-      -- after the language server attaches to the current buffer
+      -- Use LspAttach autocommand
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('UserLspConfig', {}),
         callback = function(ev)
@@ -37,6 +52,15 @@ return {
         gopls = {},
         rust_analyzer = {},
         tsserver = {},
+        lua_ls = {
+          settings = {
+            Lua = {
+              diagnostics = {
+                globals = { 'vim' } -- Add vim to known globals
+              }
+            }
+          }
+        }
       }
 
       for server, config in pairs(servers) do
@@ -45,7 +69,7 @@ return {
     end,
   },
 
-  -- Mason for managing LSP servers
+  -- Mason
   {
     'williamboman/mason.nvim',
     cmd = 'Mason',
@@ -55,6 +79,7 @@ return {
         'gopls',
         'rust-analyzer',
         'typescript-language-server',
+        'lua-language-server',
       },
     },
     config = function(_, opts)
@@ -69,6 +94,7 @@ return {
     end,
   },
 
+  -- Mason LSP config
   {
     'williamboman/mason-lspconfig.nvim',
     opts = {
@@ -76,20 +102,9 @@ return {
         'lua_ls',
         'gopls',
         'rust_analyzer',
+        'tsserver',
       },
       automatic_installation = true,
     },
-    config = function()
-      require('mason').setup()
-      require('mason-lspconfig').setup()
-      
-      local lspconfig = require('lspconfig')
-      
-      -- Configure servers
-      lspconfig.gopls.setup{}
-      lspconfig.lua_ls.setup{}
-      lspconfig.rust_analyzer.setup{}
-    end,
   },
 }
-

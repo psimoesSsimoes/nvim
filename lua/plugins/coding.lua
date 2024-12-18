@@ -69,20 +69,12 @@ return {
   -- GitHub Copilot
   {
     'github/copilot.vim',
+    lazy = false,  -- Make sure Copilot starts with Neovim
     event = 'InsertEnter',
     config = function()
-      -- Use Tab for accepting suggestions
       vim.g.copilot_no_tab_map = true
-      vim.g.copilot_assume_mapped = true
-      vim.g.copilot_tab_fallback = ""
-      
-      vim.keymap.set('i', '<Tab>', function()
-        if require("copilot.suggestion").is_visible() then
-          require("copilot.suggestion").accept()
-        else
-          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Tab>", true, false, true), "n", false)
-        end
-      end, { desc = "Super Tab" })
+      vim.api.nvim_set_keymap('i', '<C-J>', 'copilot#Accept("<CR>")', 
+        { silent = true, expr = true })
     end,
   },
 }
