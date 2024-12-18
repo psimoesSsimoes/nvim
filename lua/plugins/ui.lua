@@ -22,17 +22,27 @@ return {
     },
   },
 
-  -- Indent guides
+  -- Indent guides (v3 configuration)
   {
     'lukas-reineke/indent-blankline.nvim',
-    event = 'BufReadPost',
+    main = 'ibl',
+    event = 'BufReadPre',
     opts = {
-      char = '│',
-      show_trailing_blankline_indent = false,
-      show_first_indent_level = false,
+      indent = {
+        char = "│",
+      },
+      scope = { enabled = false },
+      exclude = {
+        filetypes = {
+          'help',
+          'dashboard',
+          'lazy',
+          'mason',
+          'notify',
+        },
+      },
     },
   },
-
   -- Better diagnostics
   {
     'folke/trouble.nvim',
@@ -45,3 +55,4 @@ return {
     },
   },
 }
+

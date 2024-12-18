@@ -72,7 +72,24 @@ return {
   {
     'williamboman/mason-lspconfig.nvim',
     opts = {
+      ensure_installed = {
+        'lua_ls',
+        'gopls',
+        'rust_analyzer',
+      },
       automatic_installation = true,
     },
+    config = function()
+      require('mason').setup()
+      require('mason-lspconfig').setup()
+      
+      local lspconfig = require('lspconfig')
+      
+      -- Configure servers
+      lspconfig.gopls.setup{}
+      lspconfig.lua_ls.setup{}
+      lspconfig.rust_analyzer.setup{}
+    end,
   },
 }
+
