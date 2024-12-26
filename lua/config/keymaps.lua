@@ -116,3 +116,6 @@ vim.keymap.set('n', '<leader>fc', function()
         prompt_title = 'Files in current directory',
     })
 end, { desc = 'Find files in current directory' })
+
+-- Hover over LSP symbols
+vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { desc = 'Show hover information' })

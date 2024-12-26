@@ -35,6 +35,8 @@ return {
           vim.keymap.set('n', 'gd', '<cmd>GoDef<CR>', { desc = 'Go to definition' })
           vim.keymap.set('n', '<leader>v', '<cmd>vsplit | GoDef<CR>', { desc = 'Go to definition in split' })
           vim.keymap.set('n', '<C-t>', '<C-o>', { desc = 'Go back from definition' })
+           -- Build command
+          vim.keymap.set('n', '<C-b>', '<cmd>GoBuild<CR>', { desc = 'Build Go project' })
         end,
       })
     end,
