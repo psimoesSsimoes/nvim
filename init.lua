@@ -16,6 +16,18 @@ vim.g.maplocalleader = ","
 require("config.options")
 require("config.keymaps")
 require("config.autocmds")
+-- require('lspconfig')
+
+-- require'lspconfig'.intelephense.setup{
+--   settings = {
+--     intelephense = {
+--       files = {
+--         maxSize = 5000000; -- Increase max file size if needed (in bytes)
+--       }
+--     }
+--   }
+-- }
+
 
 -- Initialize lazy.nvim
 require("lazy").setup("plugins", {

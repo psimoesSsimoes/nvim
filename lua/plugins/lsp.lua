@@ -44,6 +44,16 @@ return {
           vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
           vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
           vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+                  -- Add vertical split definition
+          vim.keymap.set('n', 'gvd', function()
+            vim.cmd('vsplit')
+            vim.lsp.buf.definition()
+          end, opts)
+            -- Add horizontal split definition
+          vim.keymap.set('n', 'ghd', function()
+            vim.cmd('split')
+            vim.lsp.buf.definition()
+          end, opts)
         end,
       })
 
@@ -51,7 +61,7 @@ return {
       local servers = {
         gopls = {},
         rust_analyzer = {},
-        tsserver = {},
+        ts_ls = {},
         lua_ls = {
           settings = {
             Lua = {
@@ -60,7 +70,16 @@ return {
               }
             }
           }
-        }
+        },
+        intelephense = { -- Add this block
+          settings = {
+            intelephense = {
+                files = {
+                  maxSize = 5000000, -- Increase max file size if needed
+                },
+            },
+          },
+        },
       }
 
       for server, config in pairs(servers) do
@@ -80,6 +99,7 @@ return {
         'rust-analyzer',
         'typescript-language-server',
         'lua-language-server',
+        'intelephense',
       },
     },
     config = function(_, opts)
@@ -102,7 +122,8 @@ return {
         'lua_ls',
         'gopls',
         'rust_analyzer',
-        'tsserver',
+        'ts_ls',
+        'intelephense',
       },
       automatic_installation = true,
     },
