@@ -119,3 +119,39 @@ end, { desc = 'Find files in current directory' })
 
 -- Hover over LSP symbols
 vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { desc = 'Show hover information' })
+-- Rename local word or selected text under cursor inside the same file
+vim.keymap.set({'n', 'v'}, '<space>r', function()
+    local word
+    -- Check if in visual mode
+    if vim.fn.mode() == 'v' or vim.fn.mode() == 'V' then
+        -- Save current register content
+        local saved_reg = vim.fn.getreg('v')
+        -- Yank selection to v register
+        vim.cmd('normal! "vy')
+        -- Get selected text
+        word = vim.fn.getreg('v')
+        -- Restore register
+        vim.fn.setreg('v', saved_reg)
+    else
+        -- Normal mode - get word under cursor
+        word = vim.fn.expand('<cword>')
+    end
+    
+    local new_word = vim.fn.input('New name: ')
+    if new_word ~= '' then
+        local pos = vim.api.nvim_win_get_cursor(0)
+        -- More aggressive escaping of special characters
+        word = word:gsub("([^%w])", "\\%1")
+        
+        -- Add pcall to handle errors
+        local ok, err = pcall(function()
+            vim.cmd(string.format('%%s/%s/%s/g', word, new_word))
+        end)
+        
+        if not ok then
+            vim.notify("No matches found or invalid pattern", vim.log.levels.WARN)
+        end
+        
+        vim.api.nvim_win_set_cursor(0, pos)
+    end
+end)

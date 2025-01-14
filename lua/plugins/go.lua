@@ -32,9 +32,9 @@ return {
           vim.keymap.set('n', '<leader>ta', '<cmd>GoTest!<CR>', { desc = 'Run all tests in file' })
           vim.keymap.set('n', '<leader>tl', '<cmd>GoTestCompile<CR>', { desc = 'Test compile' })
             -- Definition mappings
-          vim.keymap.set('n', 'gd', '<cmd>GoDef<CR>', { desc = 'Go to definition' })
-          vim.keymap.set('n', '<leader>v', '<cmd>vsplit | GoDef<CR>', { desc = 'Go to definition in split' })
-          vim.keymap.set('n', '<C-t>', '<C-o>', { desc = 'Go back from definition' })
+          -- vim.keymap.set('n', 'gd', '<cmd>GoDef<CR>', { desc = 'Go to definition' })
+          -- vim.keymap.set('n', '<leader>v', '<cmd>vsplit | GoDef<CR>', { desc = 'Go to definition in split' })
+          -- vim.keymap.set('n', '<C-t>', '<C-o>', { desc = 'Go back from definition' })
            -- Build command
           vim.keymap.set('n', '<C-b>', '<cmd>GoBuild<CR>', { desc = 'Build Go project' })
         end,

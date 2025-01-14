@@ -55,7 +55,7 @@ return {
       desc = "Diagnostics (Trouble)",
     },
     {
-      "<leader>xX",
+      "<space>xx",
       "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
       desc = "Buffer Diagnostics (Trouble)",
     },

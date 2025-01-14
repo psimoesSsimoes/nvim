@@ -25,12 +25,10 @@ return {
       })
 
       local lspconfig = require('lspconfig')
-      
       -- Global mappings
       vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
       vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
       vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
-      
       -- Use LspAttach autocommand
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('UserLspConfig', {}),
@@ -41,16 +39,16 @@ return {
           vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
           vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
           vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-          vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+          vim.keymap.set('n', '<C-r>', vim.lsp.buf.rename, opts)
           vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
           vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
                   -- Add vertical split definition
-          vim.keymap.set('n', 'gvd', function()
+          vim.keymap.set('n', 'gv', function()
             vim.cmd('vsplit')
             vim.lsp.buf.definition()
           end, opts)
             -- Add horizontal split definition
-          vim.keymap.set('n', 'ghd', function()
+          vim.keymap.set('n', 'gh', function()
             vim.cmd('split')
             vim.lsp.buf.definition()
           end, opts)
