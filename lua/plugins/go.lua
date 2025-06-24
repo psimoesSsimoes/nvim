@@ -9,6 +9,8 @@ return {
       vim.g.go_auto_type_info = 1
       -- vim.g.go_def_mode = 'gopls'
       vim.g.go_info_mode = 'gopls'
+      -- Testing settings
+      vim.g.go_test_show_name = 1
       
       -- Highlighting
       vim.g.go_highlight_types = 1

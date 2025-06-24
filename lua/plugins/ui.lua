@@ -1,6 +1,14 @@
 return {
   -- Colorscheme
   {
+  "catppuccin/nvim",
+  name = "catppuccin",
+  config = function()
+    require("catppuccin").setup({ flavour = "latte" })
+    -- vim.cmd.colorscheme "catppuccin-latte"
+  end
+},
+  {
     'tomasiser/vim-code-dark',
     lazy = false,
     priority = 1000,
@@ -15,7 +23,7 @@ return {
     event = 'VeryLazy',
     opts = {
       options = {
-        theme = 'codedark',
+        theme = 'auto',
         component_separators = '|',
         section_separators = '',
       },

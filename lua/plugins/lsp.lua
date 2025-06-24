@@ -57,9 +57,26 @@ return {
 
       -- Configure servers
       local servers = {
-        gopls = {},
+        gopls = {
+             directoryFilters = {
+          "-vendor",
+          "-.git",
+          "-node_modules",
+        },
+        },
         rust_analyzer = {},
         ts_ls = {},
+        yamlls = {
+          settings = {
+            yaml = {
+              schemas = {
+                ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
+                ["https://json.schemastore.org/docker-compose.json"] = "docker-compose*.yml",
+                -- Add more schemas as needed
+              },
+            },
+          },
+        },
         lua_ls = {
           settings = {
             Lua = {
@@ -78,6 +95,9 @@ return {
             },
           },
         },
+        clangd = {
+            -- root_dir = util.root_pattern("compile_commands.json", "compile_flags.txt", ".git", "CMakeLists.txt"),
+        }, -- <-- adiciona isto
       }
 
       for server, config in pairs(servers) do
@@ -98,6 +118,11 @@ return {
         'typescript-language-server',
         'lua-language-server',
         'intelephense',
+        'clangd', -- <-- aqui
+        'yaml-language-server', -- Add this
+        'yamllint', -- Add this
+        'stylua', -- Lua formatter
+        'prettier', -- Multi-language formatter
       },
     },
     config = function(_, opts)
@@ -122,8 +147,33 @@ return {
         'rust_analyzer',
         'ts_ls',
         'intelephense',
+        'clangd', -- <-- aqui
+        'yamlls', -- Add this
       },
       automatic_installation = true,
+      -- automatic_enable = false, -- Explicitly disable automatic enabling
     },
   },
+
+  {
+  "mfussenegger/nvim-lint",
+  event = { "BufReadPre", "BufNewFile" },
+  config = function()
+    local lint = require("lint")
+    
+    -- Configure linters by filetype
+    lint.linters_by_ft = {
+      yaml = { "yamllint" },
+    }
+    
+    -- Auto-lint on save and text changes
+    local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+      group = lint_augroup,
+      callback = function()
+        lint.try_lint()
+      end,
+    })
+  end,
+},
 }

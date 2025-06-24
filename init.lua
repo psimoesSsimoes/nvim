@@ -11,6 +11,11 @@ vim.opt.rtp:prepend(lazypath)
 -- Set leader key before lazy
 vim.g.mapleader = ","
 vim.g.maplocalleader = ","
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*",
+  command = "silent! lcd %:p:h"
+})
+
 
 -- Load core configurations
 require("config.options")
@@ -42,6 +47,22 @@ require("lazy").setup("plugins", {
   },
 })
 
+vim.api.nvim_create_user_command('GoplsShowExcludedDirs', function()
+  for _, client in ipairs(vim.lsp.get_active_clients()) do
+    if client.name == "gopls" then
+      local filters = client.config.settings and client.config.settings.gopls and client.config.settings.gopls.directoryFilters
+      if filters then
+        print("gopls excluded dirs: " .. table.concat(filters, ", "))
+      else
+        print("No gopls directoryFilters set or found.")
+      end
+      return
+    end
+  end
+  print("No active gopls LSP client found!")
+end, {})
+
+
 return {
   -- Plugin manager
   { 'folke/lazy.nvim' },
@@ -58,5 +79,8 @@ return {
   { import = 'plugins.go' },
   { import = 'plugins.lsp' },
   { import = 'plugins.telescope' },
+  -- https://github.com/LazyVim/LazyVim/issues/6039
+  -- temporary workaround for mason.nvim? 
+  -- { import = 'plugins.mason-workaround' },
   -- { import = 'plugins.notes' },
 }
