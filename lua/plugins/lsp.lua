@@ -24,7 +24,6 @@ return {
         },
       })
 
-      local lspconfig = require('lspconfig')
       -- Global mappings
       vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
       vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
@@ -58,11 +57,7 @@ return {
       -- Configure servers
       local servers = {
         gopls = {
-             directoryFilters = {
-          "-vendor",
-          "-.git",
-          "-node_modules",
-        },
+          directoryFilters = { "-vendor", "-.git", "-node_modules" },
         },
         rust_analyzer = {},
         ts_ls = {},
@@ -101,7 +96,8 @@ return {
       }
 
       for server, config in pairs(servers) do
-        lspconfig[server].setup(config)
+        vim.lsp.config[server] = config
+        vim.lsp.start(vim.lsp.config[server])
       end
     end,
   },

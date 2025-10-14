@@ -39,9 +39,6 @@ return {
         },
     },
 
-    -- Copilot
-    { 'github/copilot.vim' },
-
     -- File explorer replacement for NERDTree
     {
         'nvim-tree/nvim-tree.lua',

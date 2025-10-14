@@ -67,14 +67,33 @@ return {
   },
 
   -- GitHub Copilot
-  {
-    'github/copilot.vim',
-    lazy = false,  -- Make sure Copilot starts with Neovim
-    event = 'InsertEnter',
-    config = function()
-      vim.g.copilot_no_tab_map = true
-      vim.api.nvim_set_keymap('i', '<C-J>', 'copilot#Accept("<CR>")', 
-        { silent = true, expr = true })
-    end,
-  },
-}
+{
+  "zbirenbaum/copilot.lua",
+  cmd = "Copilot",
+  event = "InsertEnter",
+  config = function()
+    require("copilot").setup({
+      suggestion = {
+        enabled = true,
+        auto_trigger = true,
+        keymap = {
+          accept = "<C-j>",
+          next = "<C-l>",
+          prev = "<C-h>",
+          dismiss = "<C-k>",
+        },
+      },
+      panel = { enabled = true },
+      filetypes = {
+        markdown = true,
+        yaml = true,
+        lua = true,
+        go = true,
+        rust = true,
+        typescript = true,
+        php = true,
+      },
+    })
+  end,
+},
+
