@@ -54,51 +54,26 @@ return {
         end,
       })
 
-      -- Configure servers
-      local servers = {
-        gopls = {
-          directoryFilters = { "-vendor", "-.git", "-node_modules" },
-        },
-        rust_analyzer = {},
-        ts_ls = {},
-        yamlls = {
-          settings = {
-            yaml = {
-              schemas = {
-                ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
-                ["https://json.schemastore.org/docker-compose.json"] = "docker-compose*.yml",
-                -- Add more schemas as needed
-              },
-            },
-          },
-        },
-        lua_ls = {
-          settings = {
-            Lua = {
-              diagnostics = {
-                globals = { 'vim' } -- Add vim to known globals
-              }
-            }
-          }
-        },
-        intelephense = { -- Add this block
-          settings = {
-            intelephense = {
-                files = {
-                  maxSize = 5000000, -- Increase max file size if needed
-                },
-            },
-          },
-        },
-        clangd = {
-            -- root_dir = util.root_pattern("compile_commands.json", "compile_flags.txt", ".git", "CMakeLists.txt"),
-        }, -- <-- adiciona isto
-      }
 
-      for server, config in pairs(servers) do
-        vim.lsp.config[server] = config
-        vim.lsp.start(vim.lsp.config[server])
-      end
+      -- Configure servers using the new vim.lsp.config API (Neovim 0.11+)
+      -- Configure servers using the new vim.lsp.config API (Neovim 0.11+)
+    local servers = {
+      gopls = { settings = { gopls = { directoryFilters = { "-vendor", "-.git", "-node_modules" } } } },
+      rust_analyzer = {},
+      ts_ls = {},
+      yamlls = { settings = { yaml = { schemas = {} } } },
+      lua_ls = { settings = { Lua = { diagnostics = { globals = { "vim" } } } } },
+      intelephense = { settings = { intelephense = { files = { maxSize = 5000000 } } } },
+      clangd = {},
+    }
+
+    for server, config in pairs(servers) do
+      vim.lsp.config(server, config)
+    end
+
+    -- Enable the configured servers
+    vim.lsp.enable(vim.tbl_keys(servers))
+
     end,
   },
 
