@@ -1,28 +1,38 @@
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
--- General settings
-local general = augroup('General', { clear = true })
+local general = augroup("General", { clear = true })
 
--- Relative number toggle
-autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave' }, {
+-- Each window's working directory follows its file
+autocmd("BufEnter", {
   group = general,
-  pattern = '*',
-  command = 'set relativenumber'
+  command = "silent! lcd %:p:h",
 })
 
-autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter' }, {
+-- Relative numbers only in the focused window, and only where numbers are shown (not terminals, trees, etc.)
+autocmd({ "BufEnter", "FocusGained", "InsertLeave" }, {
   group = general,
-  pattern = '*',
-  command = 'set norelativenumber'
+  callback = function()
+    if vim.wo.number then
+      vim.wo.relativenumber = true
+    end
+  end,
 })
 
--- Filetype specific settings
-local filetypes = augroup('Filetypes', { clear = true })
+autocmd({ "BufLeave", "FocusLost", "InsertEnter" }, {
+  group = general,
+  callback = function()
+    if vim.wo.number then
+      vim.wo.relativenumber = false
+    end
+  end,
+})
 
-autocmd('FileType', {
+local filetypes = augroup("Filetypes", { clear = true })
+
+autocmd("FileType", {
   group = filetypes,
-  pattern = { 'go' },
+  pattern = { "go" },
   callback = function()
     vim.opt_local.expandtab = false
     vim.opt_local.tabstop = 4
@@ -30,9 +40,9 @@ autocmd('FileType', {
   end,
 })
 
-autocmd('FileType', {
+autocmd("FileType", {
   group = filetypes,
-  pattern = { 'javascript', 'typescript', 'json', 'yaml' },
+  pattern = { "javascript", "typescript", "json", "yaml" },
   callback = function()
     vim.opt_local.tabstop = 2
     vim.opt_local.shiftwidth = 2

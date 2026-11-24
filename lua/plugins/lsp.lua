@@ -1,150 +1,155 @@
--- Add this at the top to declare vim as a global
----@diagnostic disable: undefined-global
-
 return {
-  -- LSP Support
   {
-    'neovim/nvim-lspconfig',
-    event = { 'BufReadPre', 'BufNewFile' },
-    dependencies = {
-      'williamboman/mason.nvim',
-      'williamboman/mason-lspconfig.nvim',
-    },
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    -- mason must be set up first: it puts the servers it installs on PATH
+    dependencies = { "mason-org/mason.nvim" },
     config = function()
-      -- Configure diagnostics first
       vim.diagnostic.config({
         virtual_text = true,
         signs = true,
         underline = true,
         update_in_insert = false,
         severity_sort = true,
-        float = {
-          border = "rounded",
-          source = "always",
-        },
+        float = { border = "rounded", source = true },
       })
 
-      -- Global mappings
-      vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
-      vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
-      vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
-      -- Use LspAttach autocommand
-      vim.api.nvim_create_autocmd('LspAttach', {
-        group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show diagnostic" })
+
+      -- Neovim already maps K (hover), [d / ]d (diagnostics), <C-s> in insert (signature help),
+      -- grn (rename), gra (code action), grr (references), gri (implementation), grt (type definition).
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("UserLspConfig", { clear = true }),
         callback = function(ev)
-          local opts = { buffer = ev.buf }
-          vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-          vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-          vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-          vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-          vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-          vim.keymap.set('n', '<C-r>', vim.lsp.buf.rename, opts)
-          vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
-          vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-                  -- Add vertical split definition
-          vim.keymap.set('n', 'gv', function()
-            vim.cmd('vsplit')
+          local function map(lhs, rhs, desc)
+            vim.keymap.set("n", lhs, rhs, { buffer = ev.buf, desc = desc })
+          end
+          map("gd", vim.lsp.buf.definition, "Go to definition")
+          map("gD", vim.lsp.buf.declaration, "Go to declaration")
+          map("gi", vim.lsp.buf.implementation, "Go to implementation")
+          map("gr", vim.lsp.buf.references, "References")
+          map("gC", vim.lsp.buf.incoming_calls, "Callers")
+          map("<leader>rn", vim.lsp.buf.rename, "Rename symbol")
+          map("<leader>ca", vim.lsp.buf.code_action, "Code action")
+          map("gv", function()
+            vim.cmd("vsplit")
             vim.lsp.buf.definition()
-          end, opts)
-            -- Add horizontal split definition
-          vim.keymap.set('n', 'gh', function()
-            vim.cmd('split')
+          end, "Definition in vsplit")
+          map("gh", function()
+            vim.cmd("split")
             vim.lsp.buf.definition()
-          end, opts)
+          end, "Definition in split")
         end,
       })
 
+      local servers = {
+        gopls = {
+          -- In the Olympus monorepo, scope each gopls to the service directory
+          -- (e.g. Olympus/payment) instead of the whole module.
+          root_dir = function(bufnr, on_dir)
+            local modroot = vim.fs.root(bufnr, { "go.work", "go.mod" })
+            if not modroot then
+              return
+            end
+            local gomod = io.open(modroot .. "/go.mod")
+            local first = gomod and gomod:read("*l") or ""
+            if gomod then
+              gomod:close()
+            end
+            local path = vim.api.nvim_buf_get_name(bufnr)
+            local service = path:sub(#modroot + 2):match("^([^/]+)/")
+            if first:find("Easypay/Olympus", 1, true) and service then
+              on_dir(modroot .. "/" .. service)
+              return
+            end
+            on_dir(modroot)
+          end,
+          settings = {
+            gopls = {
+              expandWorkspaceToModule = false,
+              directoryFilters = {
+                "-vendor",
+                "-.git",
+                "-.claude",
+                "-**/node_modules",
+                "-legacy",
+                "-mbcp",
+              },
+            },
+          },
+        },
+        rust_analyzer = {
+          settings = {
+            ["rust-analyzer"] = {
+              check = { command = "clippy" },
+            },
+          },
+        },
+        ts_ls = {},
+        yamlls = { settings = { yaml = { schemas = {} } } },
+        lua_ls = { settings = { Lua = { diagnostics = { globals = { "vim" } } } } },
+        intelephense = { settings = { intelephense = { files = { maxSize = 5000000 } } } },
+        clangd = {},
+      }
 
-      -- Configure servers using the new vim.lsp.config API (Neovim 0.11+)
-      -- Configure servers using the new vim.lsp.config API (Neovim 0.11+)
-    local servers = {
-      gopls = { settings = { gopls = { directoryFilters = { "-vendor", "-.git", "-node_modules" } } } },
-      rust_analyzer = {},
-      ts_ls = {},
-      yamlls = { settings = { yaml = { schemas = {} } } },
-      lua_ls = { settings = { Lua = { diagnostics = { globals = { "vim" } } } } },
-      intelephense = { settings = { intelephense = { files = { maxSize = 5000000 } } } },
-      clangd = {},
-    }
-
-    for server, config in pairs(servers) do
-      vim.lsp.config(server, config)
-    end
-
-    -- Enable the configured servers
-    vim.lsp.enable(vim.tbl_keys(servers))
-
+      for server, config in pairs(servers) do
+        vim.lsp.config(server, config)
+      end
+      vim.lsp.enable(vim.tbl_keys(servers))
     end,
   },
 
-  -- Mason
   {
-    'williamboman/mason.nvim',
-    cmd = 'Mason',
-    keys = { { '<leader>cm', '<cmd>Mason<cr>', desc = 'Mason' } },
+    "mason-org/mason.nvim",
+    cmd = "Mason",
+    keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
     opts = {
       ensure_installed = {
-        'gopls',
-        'rust-analyzer',
-        'typescript-language-server',
-        'lua-language-server',
-        'intelephense',
-        'clangd', -- <-- aqui
-        'yaml-language-server', -- Add this
-        'yamllint', -- Add this
-        'stylua', -- Lua formatter
-        'prettier', -- Multi-language formatter
+        -- LSP servers
+        "gopls",
+        "rust-analyzer",
+        "typescript-language-server",
+        "lua-language-server",
+        "intelephense",
+        "clangd",
+        "yaml-language-server",
+        -- Linters and formatters
+        "yamllint",
+        "stylua",
+        "prettier",
       },
     },
     config = function(_, opts)
-      require('mason').setup(opts)
-      local mr = require('mason-registry')
-      for _, tool in ipairs(opts.ensure_installed) do
-        local p = mr.get_package(tool)
-        if not p:is_installed() then
-          p:install()
+      require("mason").setup(opts)
+      local registry = require("mason-registry")
+      registry.refresh(function()
+        for _, tool in ipairs(opts.ensure_installed) do
+          local ok, pkg = pcall(registry.get_package, tool)
+          if not ok then
+            vim.notify("mason: unknown package " .. tool, vim.log.levels.WARN)
+          elseif not pkg:is_installed() then
+            pkg:install()
+          end
         end
-      end
+      end)
     end,
   },
 
-  -- Mason LSP config
   {
-    'williamboman/mason-lspconfig.nvim',
-    opts = {
-      ensure_installed = {
-        'lua_ls',
-        'gopls',
-        'rust_analyzer',
-        'ts_ls',
-        'intelephense',
-        'clangd', -- <-- aqui
-        'yamlls', -- Add this
-      },
-      automatic_installation = true,
-      -- automatic_enable = false, -- Explicitly disable automatic enabling
-    },
+    "mfussenegger/nvim-lint",
+    event = { "BufReadPost", "BufNewFile" },
+    config = function()
+      local lint = require("lint")
+      -- Rust is linted by rust-analyzer (clippy on save), so it is not listed here
+      lint.linters_by_ft = {
+        yaml = { "yamllint" },
+      }
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "InsertLeave" }, {
+        group = vim.api.nvim_create_augroup("lint", { clear = true }),
+        callback = function()
+          lint.try_lint()
+        end,
+      })
+    end,
   },
-
-  {
-  "mfussenegger/nvim-lint",
-  event = { "BufReadPre", "BufNewFile" },
-  config = function()
-    local lint = require("lint")
-    
-    -- Configure linters by filetype
-    lint.linters_by_ft = {
-      yaml = { "yamllint" },
-    }
-    
-    -- Auto-lint on save and text changes
-    local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
-    vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-      group = lint_augroup,
-      callback = function()
-        lint.try_lint()
-      end,
-    })
-  end,
-},
 }

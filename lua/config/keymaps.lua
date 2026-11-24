@@ -1,157 +1,95 @@
 local map = vim.keymap.set
 
--- Better window navigation
-map('n', '<C-h>', '<C-w>h', { desc = 'Window left' })
-map('n', '<C-l>', '<C-w>l', { desc = 'Window right' })
-map('n', '<C-j>', '<C-w>j', { desc = 'Window down' })
-map('n', '<C-k>', '<C-w>k', { desc = 'Window up' })
+-- Window navigation
+map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
+map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
+map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
+map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
 
--- Center screen
-map('n', '<space>', 'zz', { desc = 'Center screen' })
+map("n", "<space>", "zz", { desc = "Center screen" })
+map("n", "<leader><space>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
 
--- Remove search highlight
-map('n', '<leader><space>', ':nohlsearch<CR>', { desc = 'Clear search highlight' })
+-- Keep selection after indenting
+map("v", "<", "<gv")
+map("v", ">", ">gv")
 
--- Better indenting
-map('v', '<', '<gv')
-map('v', '>', '>gv')
+map("n", "<leader>1", "1gt", { desc = "Go to tab 1" })
+map("n", "<leader>2", "2gt", { desc = "Go to tab 2" })
+map("n", "<leader>3", "3gt", { desc = "Go to tab 3" })
+map("n", "<leader>4", "4gt", { desc = "Go to tab 4" })
 
--- Tabs
-map('n', '<leader>1', '1gt', { desc = 'Go to tab 1' })
-map('n', '<leader>2', '2gt', { desc = 'Go to tab 2' })
-map('n', '<leader>3', '3gt', { desc = 'Go to tab 3' })
-map('n', '<leader>4', '4gt', { desc = 'Go to tab 4' })
+map("n", "<leader>w", "<cmd>w!<CR>", { desc = "Save file" })
+map("n", "<leader>q", "<cmd>q!<CR>", { desc = "Quit without saving" })
 
--- Quick save
-map('n', '<leader>w', ':w!<CR>', { desc = 'Save file' })
-map('n', '<leader>q', ':q!<CR>', { desc = 'Quit' })
-
--- Exit insert mode
-map('i', 'jk', '<ESC>', { desc = 'Exit insert mode' })
+map("i", "jk", "<ESC>", { desc = "Exit insert mode" })
 
 -- Move lines
--- Function to move lines
-local function move_line(direction)
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local line_nr = cursor[1]
-  local line = vim.api.nvim_buf_get_lines(0, line_nr - 1, line_nr, false)[1]
-  
-  if direction == "up" and line_nr > 1 then
-    vim.api.nvim_buf_set_lines(0, line_nr - 1, line_nr, false, {})
-    vim.api.nvim_buf_set_lines(0, line_nr - 2, line_nr - 2, false, {line})
-    vim.api.nvim_win_set_cursor(0, {line_nr - 1, cursor[2]})
-  elseif direction == "down" and line_nr < vim.api.nvim_buf_line_count(0) then
-    vim.api.nvim_buf_set_lines(0, line_nr - 1, line_nr, false, {})
-    vim.api.nvim_buf_set_lines(0, line_nr, line_nr, false, {line})
-    vim.api.nvim_win_set_cursor(0, {line_nr + 1, cursor[2]})
+map("n", "<leader><Up>", "<cmd>move .-2<CR>==", { desc = "Move line up" })
+map("n", "<leader><Down>", "<cmd>move .+1<CR>==", { desc = "Move line down" })
+map("v", "<leader><Up>", ":move '<-2<CR>gv=gv", { desc = "Move selection up" })
+map("v", "<leader><Down>", ":move '>+1<CR>gv=gv", { desc = "Move selection down" })
+
+map("n", "<Up>", "<NOP>")
+map("n", "<Down>", "<NOP>")
+map("n", "<Left>", "<NOP>")
+map("n", "<Right>", "<NOP>")
+
+-- Search from the git root (the working directory follows the current file, see autocmds.lua)
+local function git_root()
+  local root = vim.fs.root(0, ".git")
+  if not root then
+    vim.notify("Not in a git repository", vim.log.levels.WARN)
   end
+  return root
 end
 
--- Keymaps for moving lines
-vim.keymap.set('n', '<leader><Up>', function() move_line('up') end, { desc = 'Move line up' })
-vim.keymap.set('n', '<leader><Down>', function() move_line('down') end, { desc = 'Move line down' })
-
--- Also add visual mode support for moving multiple lines
-vim.keymap.set('v', '<leader><Up>', ":m '<-2<CR>gv=gv", { desc = 'Move selection up' })
-vim.keymap.set('v', '<leader><Down>', ":m '>+1<CR>gv=gv", { desc = 'Move selection down' })
-
--- Disable arrow keys
-map('n', '<Up>', '<NOP>')
-map('n', '<Down>', '<NOP>')
-map('n', '<Left>', '<NOP>')
-map('n', '<Right>', '<NOP>')
-
--- Function to get git root directory
-local function get_git_root()
-  local git_cmd = io.popen('git rev-parse --show-toplevel 2> /dev/null')
-  if git_cmd == nil then 
-    print("Failed to run git command")
-    return nil 
+map("n", "<leader>z", function()
+  local root = git_root()
+  if not root then
+    return
   end
-  
-  local git_root = git_cmd:read('*l')
-  git_cmd:close()
-  print("Git root:", git_root)
-  return git_root
-end
+  local word = vim.fn.expand("<cword>")
+  require("telescope.builtin").live_grep({
+    default_text = word,
+    cwd = root,
+    prompt_title = 'Search "' .. word .. '" in git root',
+    additional_args = { "--hidden" },
+  })
+end, { desc = "Grep word under cursor in git root" })
 
--- Search word under cursor in git root
-vim.keymap.set('n', '<leader>z', function()
-  local word = vim.fn.expand('<cword>')
-  local git_root = get_git_root()
-  
-  if git_root then
-    -- Use live_grep instead of grep_string for more reliable results
-    require('telescope.builtin').live_grep({
-      default_text = word,
-      cwd = git_root,
-      prompt_title = 'Search "' .. word .. '" in Git Root',
-      additional_args = function()
-        return { "--hidden" }  -- Include hidden files
-      end,
-    })
+map("n", "<leader>zz", function()
+  local root = git_root()
+  if not root then
+    return
+  end
+  require("telescope.builtin").find_files({ cwd = root, prompt_title = "Files in git root", hidden = true })
+end, { desc = "Find files in git root" })
+
+map("n", "<leader>fc", function()
+  require("telescope.builtin").find_files({ cwd = vim.fn.expand("%:p:h"), prompt_title = "Files in current directory" })
+end, { desc = "Find files in current directory" })
+
+-- Replace the word under cursor (or the selection) everywhere in this file
+map({ "n", "v" }, "<space>r", function()
+  local word
+  local mode = vim.fn.mode()
+  if mode == "v" or mode == "V" then
+    local saved = vim.fn.getreg("v")
+    vim.cmd('normal! "vy')
+    word = vim.fn.getreg("v")
+    vim.fn.setreg("v", saved)
   else
-    vim.notify('Not in a git repository', vim.log.levels.WARN)
+    word = vim.fn.expand("<cword>")
   end
-end, { desc = 'Search word under cursor in git root' })
 
--- Add a test keymap to verify git root searching
-vim.keymap.set('n', '<leader>zz', function()
-  local git_root = get_git_root()
-  if git_root then
-    require('telescope.builtin').find_files({
-      cwd = git_root,
-      prompt_title = 'Files in Git Root',
-      hidden = true,  -- Include hidden files
-    })
-  else
-    vim.notify('Not in a git repository', vim.log.levels.WARN)
+  local new_word = vim.fn.input("New name: ")
+  if new_word == "" then
+    return
   end
-end, { desc = 'List all files in git root' })
-
--- Find files in current file's directory
-vim.keymap.set('n', '<leader>fc', function()
-    require('telescope.builtin').find_files({
-        cwd = vim.fn.expand('%:p:h'),
-        prompt_title = 'Files in current directory',
-    })
-end, { desc = 'Find files in current directory' })
-
--- Hover over LSP symbols
-vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', { desc = 'Show hover information' })
--- Rename local word or selected text under cursor inside the same file
-vim.keymap.set({'n', 'v'}, '<space>r', function()
-    local word
-    -- Check if in visual mode
-    if vim.fn.mode() == 'v' or vim.fn.mode() == 'V' then
-        -- Save current register content
-        local saved_reg = vim.fn.getreg('v')
-        -- Yank selection to v register
-        vim.cmd('normal! "vy')
-        -- Get selected text
-        word = vim.fn.getreg('v')
-        -- Restore register
-        vim.fn.setreg('v', saved_reg)
-    else
-        -- Normal mode - get word under cursor
-        word = vim.fn.expand('<cword>')
-    end
-    
-    local new_word = vim.fn.input('New name: ')
-    if new_word ~= '' then
-        local pos = vim.api.nvim_win_get_cursor(0)
-        -- More aggressive escaping of special characters
-        word = word:gsub("([^%w])", "\\%1")
-        
-        -- Add pcall to handle errors
-        local ok, err = pcall(function()
-            vim.cmd(string.format('%%s/%s/%s/g', word, new_word))
-        end)
-        
-        if not ok then
-            vim.notify("No matches found or invalid pattern", vim.log.levels.WARN)
-        end
-        
-        vim.api.nvim_win_set_cursor(0, pos)
-    end
-end)
+  local pos = vim.api.nvim_win_get_cursor(0)
+  local ok = pcall(vim.cmd, string.format("%%s/\\V%s/%s/g", vim.fn.escape(word, "/\\"), vim.fn.escape(new_word, "/\\&")))
+  if not ok then
+    vim.notify("No matches found", vim.log.levels.WARN)
+  end
+  vim.api.nvim_win_set_cursor(0, pos)
+end, { desc = "Replace word in file" })
