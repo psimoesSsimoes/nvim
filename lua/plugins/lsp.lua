@@ -113,6 +113,7 @@ return {
         "intelephense",
         "clangd",
         "yaml-language-server",
+        "jdtls", -- started by nvim-jdtls (java.lua), not vim.lsp.enable
         -- Linters and formatters
         "yamllint",
         "stylua",

@@ -22,6 +22,7 @@ return {
       { "<leader>f", "<cmd>Telescope find_files<CR>", desc = "Find files" },
       { "<leader>g", "<cmd>Telescope live_grep<CR>", desc = "Live grep" },
       { "<leader>b", "<cmd>Telescope buffers<CR>", desc = "Buffers" },
+      { "<leader>?", "<cmd>Telescope keymaps<CR>", desc = "Shortcut cheatsheet" },
     },
     config = function()
       local telescope = require("telescope")
